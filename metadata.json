@@ -1,0 +1,5 @@
+{
+  "name": "AgileX Team AI Chat",
+  "description": "A conversational AI application featuring personas from the AgileX development team. Switch between team members like Sarah (Project Manager), Emma (UX/UI Designer), Jack (Lead Developer), David (QA Engineer), and Paul (DevOps Specialist) to get expert advice from different perspectives. The chat history is saved locally for a seamless experience.",
+  "requestFramePermissions": []
+}
