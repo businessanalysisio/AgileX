@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import {
   canClassify,
@@ -21,10 +21,14 @@ export const TaskDetailPage: React.FC<{ taskId: string }> = ({ taskId }) => {
   const projects = useAppStore(s => s.projects);
   const phases = useAppStore(s => s.phases);
   const users = useAppStore(s => s.users);
-  const blockers = useAppStore(s => s.blockers.filter(b => b.taskId === taskId));
-  const evidence = useAppStore(s => s.evidence.filter(e => e.taskId === taskId));
-  const comments = useAppStore(s => s.comments.filter(c => c.taskId === taskId));
-  const audit = useAppStore(s => s.audit.filter(a => a.taskId === taskId));
+  const allBlockers = useAppStore(s => s.blockers);
+  const allEvidence = useAppStore(s => s.evidence);
+  const allComments = useAppStore(s => s.comments);
+  const allAudit = useAppStore(s => s.audit);
+  const blockers = useMemo(() => allBlockers.filter(b => b.taskId === taskId), [allBlockers, taskId]);
+  const evidence = useMemo(() => allEvidence.filter(e => e.taskId === taskId), [allEvidence, taskId]);
+  const comments = useMemo(() => allComments.filter(c => c.taskId === taskId), [allComments, taskId]);
+  const audit = useMemo(() => allAudit.filter(a => a.taskId === taskId), [allAudit, taskId]);
   const navigate = useAppStore(s => s.navigate);
   const updateTask = useAppStore(s => s.updateTask);
   const addComment = useAppStore(s => s.addComment);

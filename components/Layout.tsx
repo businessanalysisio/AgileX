@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { canManageUsers, isLeadOnAnyProject, isPmOnAnyProject } from '../services/access';
 import { formatWhen, labelRole } from '../services/format';
@@ -23,7 +23,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const route = useAppStore(s => s.route);
   const navigate = useAppStore(s => s.navigate);
   const logout = useAppStore(s => s.logout);
-  const notifications = useAppStore(s => s.notifications.filter(n => n.userId === s.currentUserId));
+  const currentUserId = useAppStore(s => s.currentUserId);
+  const allNotifications = useAppStore(s => s.notifications);
+  const notifications = useMemo(
+    () => allNotifications.filter(n => n.userId === currentUserId),
+    [allNotifications, currentUserId]
+  );
   const markRead = useAppStore(s => s.markNotificationsRead);
   const [openNav, setOpenNav] = useState(false);
   const [openNotes, setOpenNotes] = useState(false);
