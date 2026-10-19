@@ -1,276 +1,196 @@
-// ─── RBAC Types ───────────────────────────────────────────────────────────────
+export type ProjectRole = 'ProjectManager' | 'TeamLead' | 'TeamMember';
 
-export type RoleName =
-  | 'Guest'
-  | 'Contributor'
-  | 'Reviewer'
-  | 'CommunityManager'
-  | 'BoardMember'
-  | 'Admin';
+export type UserStatus = 'active' | 'pending' | 'deactivated';
 
-export type Permission =
-  | 'view_leaderboard'
-  | 'submit_contribution'
-  | 'view_own_profile'
-  | 'view_all_profiles'
-  | 'review_contributions'
-  | 'approve_contributions'
-  | 'reject_contributions'
-  | 'manage_members'
-  | 'assign_roles'
-  | 'assign_reviewers'
-  | 'moderate_community'
-  | 'create_proposals'
-  | 'vote_proposals'
-  | 'manage_rewards'
-  | 'distribute_rewards'
-  | 'configure_system'
-  | 'manage_rbac'
-  | 'view_audit_logs'
-  | 'view_analytics';
+export type TaskStatus = 'not_started' | 'in_progress' | 'blocked' | 'in_review' | 'done';
 
-export interface Role {
-  id: string;
-  name: RoleName;
-  label: string;
-  description: string;
-  permissions: Permission[];
-  color: string;
-  level: number;
+export type Priority = 'low' | 'medium' | 'high' | 'critical';
+
+export type ConditionalClass =
+  | 'unclassified'
+  | 'applicable'
+  | 'not_applicable'
+  | 'needs_clarification';
+
+export type BlockerStatus = 'open' | 'in_progress' | 'resolved' | 'reopened';
+
+export type EvidenceKind = 'file' | 'link';
+
+export type EvidenceStatus = 'draft' | 'submitted' | 'replaced';
+
+export type ApprovalChoice = 'approve' | 'reject' | 'approve_with_conditions';
+
+export type PageId =
+  | 'dashboard'
+  | 'tasks'
+  | 'timeline'
+  | 'blockers'
+  | 'evidence'
+  | 'scope'
+  | 'approvals'
+  | 'access'
+  | 'audit';
+
+export interface Route {
+  page: PageId;
+  taskId?: string;
 }
 
-// ─── Member Types ─────────────────────────────────────────────────────────────
-
-export type MemberStatus = 'active' | 'suspended' | 'archived';
-
-export interface Member {
+export interface User {
   id: string;
   name: string;
   email: string;
-  avatar: string;
-  role: RoleName;
-  status: MemberStatus;
-  joinedAt: string;
-  bio: string;
-  skills: string[];
-  github?: string;
-  reputationScore: number;
-  tokenBalance: number;
-  totalContributions: number;
-}
-
-// ─── Contribution Types ───────────────────────────────────────────────────────
-
-export type ContributionCategory =
-  | 'Code'
-  | 'Content'
-  | 'Revenue'
-  | 'Community'
-  | 'Governance';
-
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'under_review';
-
-export interface Contribution {
-  id: string;
-  memberId: string;
-  memberName: string;
-  activityType: string;
-  category: ContributionCategory;
-  points: number;
-  description: string;
-  timestamp: string;
-  projectId?: string;
-  projectName?: string;
-  approvalStatus: ApprovalStatus;
-  reviewerId?: string;
-  reviewerName?: string;
-  reviewNote?: string;
-  reviewedAt?: string;
-  githubPrUrl?: string;
-  evidence?: string;
-}
-
-// ─── Reputation Types ─────────────────────────────────────────────────────────
-
-export interface ReputationScore {
-  memberId: string;
-  totalScore: number;
-  categoryBreakdown: Record<ContributionCategory, number>;
-  lastCalculated: string;
-  rank: number;
-  trend: 'up' | 'down' | 'stable';
-  history: { date: string; score: number }[];
-}
-
-export interface CategoryWeight {
-  category: ContributionCategory;
-  weight: number;
-  color: string;
-  icon: string;
-}
-
-// ─── Governance Types ─────────────────────────────────────────────────────────
-
-export type ProposalStatus = 'draft' | 'active' | 'passed' | 'rejected' | 'executed';
-export type ProposalCategory =
-  | 'project_approval'
-  | 'fund_allocation'
-  | 'member_acceptance'
-  | 'strategic'
-  | 'policy'
-  | 'other';
-
-export interface Proposal {
-  id: string;
+  status: UserStatus;
+  orgAdmin: boolean;
   title: string;
-  description: string;
-  category: ProposalCategory;
-  authorId: string;
-  authorName: string;
-  status: ProposalStatus;
-  createdAt: string;
-  endsAt: string;
-  votesFor: number;
-  votesAgainst: number;
-  totalWeight: number;
-  comments: ProposalComment[];
-  executionNote?: string;
 }
-
-export interface Vote {
-  id: string;
-  proposalId: string;
-  memberId: string;
-  memberName: string;
-  choice: 'for' | 'against' | 'abstain';
-  weight: number;
-  timestamp: string;
-  rationale?: string;
-}
-
-export interface ProposalComment {
-  id: string;
-  authorId: string;
-  authorName: string;
-  text: string;
-  timestamp: string;
-}
-
-// ─── Reward Types ─────────────────────────────────────────────────────────────
-
-export type RewardType = 'profit_sharing' | 'bonus_tokens' | 'contributor_reward';
-
-export interface RewardPool {
-  id: string;
-  name: string;
-  type: RewardType;
-  totalAmount: number;
-  currency: string;
-  snapshotDate: string;
-  distributedAt?: string;
-  status: 'pending' | 'distributed';
-  createdById: string;
-}
-
-export interface RewardAllocation {
-  id: string;
-  poolId: string;
-  memberId: string;
-  memberName: string;
-  reputationScore: number;
-  sharePercentage: number;
-  amount: number;
-  distributed: boolean;
-}
-
-// ─── Audit Log Types ──────────────────────────────────────────────────────────
-
-export type AuditAction =
-  | 'member_created'
-  | 'member_updated'
-  | 'role_changed'
-  | 'contribution_submitted'
-  | 'contribution_approved'
-  | 'contribution_rejected'
-  | 'proposal_created'
-  | 'vote_cast'
-  | 'reward_distributed'
-  | 'permission_changed'
-  | 'member_suspended'
-  | 'reputation_recalculated';
-
-export interface AuditLog {
-  id: string;
-  action: AuditAction;
-  actorId: string;
-  actorName: string;
-  targetId?: string;
-  targetName?: string;
-  details: string;
-  timestamp: string;
-}
-
-// ─── Project Types ────────────────────────────────────────────────────────────
 
 export interface Project {
   id: string;
   name: string;
+  code: string;
+  summary: string;
+}
+
+export interface Phase {
+  id: string;
+  projectId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  order: number;
+}
+
+export interface Milestone {
+  id: string;
+  projectId: string;
+  phaseId: string;
+  name: string;
+  date: string;
+  ownerId: string;
+  summary: string;
+}
+
+export interface Task {
+  id: string;
+  code: string;
+  projectId: string;
+  phaseId: string;
+  milestoneId?: string;
+  title: string;
   description: string;
-  status: 'active' | 'completed' | 'archived';
+  status: TaskStatus;
+  priority: Priority;
+  ownerId: string;
+  assigneeIds: string[];
+  approverId?: string;
+  authorizedUserIds: string[];
+  startDate: string;
+  dueDate: string;
+  isConditional: boolean;
+  classification: ConditionalClass;
+  classificationNote: string;
+  notes: string;
+}
+
+export interface Blocker {
+  id: string;
+  taskId: string;
+  title: string;
+  description: string;
+  status: BlockerStatus;
+  ownerId?: string;
+  raisedById: string;
+  resolutionNote: string;
+  reopenReason: string;
   createdAt: string;
 }
 
-// ─── UI / App State Types ─────────────────────────────────────────────────────
-
-export type PageId =
-  | 'login'
-  | 'dashboard'
-  | 'contributions'
-  | 'members'
-  | 'reputation'
-  | 'governance'
-  | 'rewards'
-  | 'analytics'
-  | 'settings'
-  | 'profile';
-
-export interface AppState {
-  currentUser: Member | null;
-  isAuthenticated: boolean;
-  currentPage: PageId;
-  selectedMemberId: string | null;
-  selectedProposalId: string | null;
-  selectedContributionId: string | null;
-  members: Member[];
-  contributions: Contribution[];
-  reputationScores: ReputationScore[];
-  proposals: Proposal[];
-  votes: Vote[];
-  rewardPools: RewardPool[];
-  rewardAllocations: RewardAllocation[];
-  auditLogs: AuditLog[];
-  projects: Project[];
-  isSidebarOpen: boolean;
-  activeModal: string | null;
-  notification: { type: 'success' | 'error' | 'info'; message: string } | null;
-
-  login: (memberId: string) => void;
-  logout: () => void;
-  navigate: (page: PageId, params?: { memberId?: string; proposalId?: string; contributionId?: string }) => void;
-  toggleSidebar: () => void;
-  openModal: (modalId: string) => void;
-  closeModal: () => void;
-  showNotification: (type: 'success' | 'error' | 'info', message: string) => void;
-  addMember: (member: Omit<Member, 'id' | 'reputationScore' | 'totalContributions'>) => void;
-  updateMember: (id: string, updates: Partial<Member>) => void;
-  updateMemberStatus: (id: string, status: MemberStatus) => void;
-  assignRole: (memberId: string, role: RoleName) => void;
-  submitContribution: (contribution: Omit<Contribution, 'id' | 'timestamp' | 'memberName' | 'approvalStatus'>) => void;
-  reviewContribution: (id: string, status: 'approved' | 'rejected', note: string) => void;
-  recalculateReputation: (memberId?: string) => void;
-  createProposal: (proposal: Omit<Proposal, 'id' | 'createdAt' | 'votesFor' | 'votesAgainst' | 'totalWeight' | 'comments' | 'authorName'>) => void;
-  castVote: (proposalId: string, choice: 'for' | 'against' | 'abstain', rationale?: string) => void;
-  addComment: (proposalId: string, text: string) => void;
-  createRewardPool: (pool: Omit<RewardPool, 'id' | 'status'>) => void;
-  distributeRewards: (poolId: string) => void;
+export interface Evidence {
+  id: string;
+  taskId: string;
+  label: string;
+  kind: EvidenceKind;
+  fileName?: string;
+  fileSize?: string;
+  fileType?: string;
+  url?: string;
+  version: number;
+  replacesId?: string;
+  status: EvidenceStatus;
+  uploaderId: string;
+  createdAt: string;
 }
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface ApprovalDecision {
+  id: string;
+  projectId: string;
+  phaseId: string;
+  decision: ApprovalChoice;
+  rationale: string;
+  conditions: string;
+  actorId: string;
+  createdAt: string;
+  supersedesId?: string;
+}
+
+export interface AccessGrant {
+  id: string;
+  userId: string;
+  projectId: string;
+  role: ProjectRole;
+}
+
+export interface AuditEntry {
+  id: string;
+  at: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  entityType: 'task' | 'blocker' | 'evidence' | 'approval' | 'access' | 'user';
+  entityId: string;
+  taskId?: string;
+  projectId?: string;
+  summary: string;
+  before?: string;
+  after?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  message: string;
+  at: string;
+  read: boolean;
+}
+
+export interface DashboardFilters {
+  projectId: string;
+  phaseId: string;
+  status: string;
+}
+
+export const TASK_STATUSES: TaskStatus[] = [
+  'not_started',
+  'in_progress',
+  'blocked',
+  'in_review',
+  'done',
+];
+
+export const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'critical'];
+
+export const BLOCKER_STATUSES: BlockerStatus[] = [
+  'open',
+  'in_progress',
+  'resolved',
+  'reopened',
+];

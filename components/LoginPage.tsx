@@ -1,124 +1,91 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/appStore';
-import { ROLE_LABELS, ROLE_COLORS } from '../constants';
-import { Avatar } from './ui/Avatar';
-import type { Member } from '../types';
+import { labelRole } from '../services/format';
+import { ToastHost } from './ui';
+
+const BLURB: Record<string, string> = {
+  'u-minh': 'PM on both projects. Opens the six-panel governance dashboard.',
+  'u-hoa': 'Harbor lead. Sees only her assigned discovery and launch work, not the build tasks.',
+  'u-khoa': 'Clinic lead. Sees intake work. The lab interface stays hidden.',
+  'u-an': 'Harbor member. Can update tasks he owns. Other Harbor tasks are visible but locked.',
+  'u-bao': 'Harbor member. Owns field mapping.',
+  'u-mai': 'Clinic member. Owns consent copy and the lab interface.',
+  'u-lan': 'Admin. Invites people, assigns roles, grants or revokes project access, and deactivates accounts.',
+  'u-que': 'Pending invitation. Accept it, then sign in.',
+  'u-duc': 'Deactivated. Sign-in is refused. His comment on H-01 stays attributed to him.',
+};
 
 export const LoginPage: React.FC = () => {
-  const { members, login } = useAppStore();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const users = useAppStore(s => s.users);
+  const grants = useAppStore(s => s.grants);
+  const projects = useAppStore(s => s.projects);
+  const login = useAppStore(s => s.login);
+  const acceptInvite = useAppStore(s => s.acceptInvite);
+  const [selected, setSelected] = useState<string | null>('u-minh');
 
-  const activeDemoAccounts = members.filter(m => m.status !== 'archived');
-  const filtered = activeDemoAccounts.filter(m =>
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    ROLE_LABELS[m.role].toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleLogin = () => {
-    if (selected) login(selected);
+  const roleOf = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user?.orgAdmin) return 'Admin';
+    const grant = grants.find(g => g.userId === userId);
+    return grant ? labelRole(grant.role) : 'No project role';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
-        {/* Hero */}
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-10 text-white text-center">
-          <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-9 h-9 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold mb-1">CoopContrib</h1>
-          <p className="text-indigo-200 text-sm">Contribution Management Platform</p>
-          <div className="mt-4 flex justify-center gap-6 text-xs text-indigo-200">
-            <span>Track Contributions</span>
-            <span>•</span>
-            <span>Build Reputation</span>
-            <span>•</span>
-            <span>Govern Fairly</span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-1">Choose a Demo Account</h2>
-          <p className="text-sm text-gray-500 mb-4">Each account has a different role and permissions level.</p>
-
-          <input
-            type="text"
-            placeholder="Search by name or role..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
-          />
-
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-            {filtered.map(member => (
-              <DemoAccountCard
-                key={member.id}
-                member={member}
-                selected={selected === member.id}
-                onClick={() => setSelected(member.id)}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={!selected}
-            className="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-xl transition-colors text-sm"
-          >
-            {selected ? `Sign in as ${members.find(m => m.id === selected)?.name}` : 'Select an account to continue'}
-          </button>
-
-          <p className="text-center text-xs text-gray-400 mt-3">
-            This is a demo environment. No real authentication required.
+    <div className="min-h-screen bg-[#1c1915] text-stone-100">
+      <div className="max-w-5xl mx-auto px-4 py-10 md:py-16">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.2em] text-teal-300">Northline</div>
+          <h1 className="font-serif text-4xl md:text-5xl text-white mt-2">Project & task governance</h1>
+          <p className="text-stone-300 mt-3 max-w-2xl">
+            Pick a demo account. Each role sees a different slice of the same projects: tasks, blockers, evidence, conditional scope, timeline, access, and approval.
           </p>
         </div>
+        <div className="grid md:grid-cols-2 gap-3">
+          {users.map(user => {
+            const projectsFor = grants
+              .filter(g => g.userId === user.id)
+              .map(g => projects.find(p => p.id === g.projectId)?.name)
+              .filter(Boolean)
+              .join(', ');
+            const active = selected === user.id;
+            return (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => setSelected(user.id)}
+                className={`text-left rounded-2xl border p-4 ${active ? 'border-teal-400 bg-stone-900' : 'border-stone-700 bg-stone-900/40 hover:border-stone-500'}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="font-medium">{user.name}</div>
+                  <div className="text-xs text-teal-200">{roleOf(user.id)}</div>
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{user.status}{projectsFor ? ` · ${projectsFor}` : ''}</div>
+                <p className="text-sm text-stone-300 mt-2">{BLURB[user.id]}</p>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={!selected}
+            onClick={() => selected && login(selected)}
+            className="px-4 py-2.5 rounded-xl bg-teal-500 text-stone-950 font-semibold disabled:opacity-40"
+          >
+            Sign in
+          </button>
+          {selected && users.find(u => u.id === selected)?.status === 'pending' && (
+            <button
+              type="button"
+              onClick={() => acceptInvite(selected)}
+              className="px-4 py-2.5 rounded-xl border border-stone-500"
+            >
+              Accept invitation
+            </button>
+          )}
+        </div>
       </div>
+      <ToastHost />
     </div>
   );
 };
-
-const DemoAccountCard: React.FC<{
-  member: Member;
-  selected: boolean;
-  onClick: () => void;
-}> = ({ member, selected, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-      selected
-        ? 'border-indigo-500 bg-indigo-50'
-        : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
-    }`}
-  >
-    <Avatar initials={member.avatar} size="md" />
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-semibold text-gray-900 text-sm">{member.name}</span>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[member.role]}`}>
-          {ROLE_LABELS[member.role]}
-        </span>
-        {member.status !== 'active' && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-            {member.status}
-          </span>
-        )}
-      </div>
-      <p className="text-xs text-gray-500 truncate mt-0.5">{member.bio}</p>
-    </div>
-    <div className="text-right flex-shrink-0">
-      <div className="text-xs font-semibold text-indigo-600">{member.reputationScore.toFixed(1)}</div>
-      <div className="text-xs text-gray-400">rep</div>
-    </div>
-    {selected && (
-      <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-    )}
-  </button>
-);
