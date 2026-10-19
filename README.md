@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Northline — Project & Task Governance
 
-# Run and deploy your AI Studio app
+Web app for the class project described in the Project & Task Governance Platform SRS. It is a role-based demo: tasks, blockers, evidence, conditional scope, a timeline, access administration, and auditable readiness decisions.
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/drive/103-vUP568j-82KpeKGSzmNLEhXcLrigB
+1. `npm install`
+2. `npm run dev`
 
-## Run Locally
+Sign in as one of the demo accounts. No password and no API key.
 
-**Prerequisites:**  Node.js
+| Account | What to try |
+| --- | --- |
+| Minh Pham | PM dashboard across Harbor CRM and Clinic Portal |
+| Hoa Le | Team lead scoped to her Harbor deliverables. Direct link `#/tasks/t-h04` is denied |
+| Khoa Dang | Clinic lead. Does not see the lab interface task |
+| An Nguyen | Can update tasks he owns. Updating H-03 is rejected |
+| Lan Vo | Invite, assign roles, revoke access, deactivate |
+| Que Nguyen | Pending invitation |
+| Duc Phan | Deactivated. Cannot sign in. His comment remains on H-01 |
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Files attached as evidence are stored as name, size, and type in this demo. There is no object store behind the upload control.
